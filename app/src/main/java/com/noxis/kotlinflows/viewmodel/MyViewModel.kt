@@ -4,7 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class MyViewModel : ViewModel() {
@@ -23,14 +27,23 @@ class MyViewModel : ViewModel() {
         collectFlow()
     }
     private fun collectFlow() {
+
         viewModelScope.launch {
-         //   countDownFlow.collect {
-        //        println("Collect count: $it")
-        //    }
-            countDownFlow.collectLatest {
-                delay(1500L)
-                println("Collect latest count: $it")
+            countDownFlow
+                .filter { it % 2 == 0 }
+                .map { "Map $it" }
+                /**
+                 * countDownFlow.onEach {
+                 *    println("onEach: $it")
+                 * }.launchIn(viewModelScope)
+                 */
+                .onEach {
+                    println(it)
+                }
+                .collect {
+                println("Collect count: $it")
             }
+
         }
     }
     companion object {
