@@ -3,7 +3,9 @@ package com.noxis.kotlinflows.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collectLatest
@@ -27,8 +29,35 @@ class MyViewModel : ViewModel() {
     private val _stateCount = MutableStateFlow(0)
     val stateCount = _stateCount.asStateFlow()
 
+    private val _stateShared = MutableSharedFlow<Int>(replay = 5)
+    val stateShared = _stateShared.asSharedFlow()
+
     init {
-        collectFlow()
+      //  collectFlow()
+        squareNumber(5)
+
+        viewModelScope.launch {
+            stateShared.collect {
+                delay(2000L)
+                println("FIRST FLOW: The receive number: $it")
+            }
+        }
+        viewModelScope.launch {
+            stateShared.collect {
+                delay(3000L)
+                println("SECOND FLOW: The receive number: $it")
+            }
+        }
+        //Только когда есть подписка будет осуществлен выброс emit
+        squareNumber(5)
+        //Можно добавить значение replay для sharedFlow
+        //тогда выбросу будут кэшироваться и отдаваться последним подписчикам
+    }
+
+    fun squareNumber(number: Int) {
+        viewModelScope.launch {
+            _stateShared.emit(number * number)
+        }
     }
 
     fun incrementCount() {
