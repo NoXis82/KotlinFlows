@@ -2,10 +2,13 @@ package com.noxis.kotlinflows.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.launchIn
@@ -30,27 +33,24 @@ class MyViewModel : ViewModel() {
         collectFlow()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun collectFlow() {
 
         viewModelScope.launch {
-            //Возвращает количество элементов, соответствующих заданному предикату
-            val count = countDownFlow.count { it > 3 }
-            println("Returns count predicate: $count")
-
-            //Накапливает значение, начиная с первого элемента, и
-            // применяет операцию к текущему значению аккумулятора и каждому элементу.
-            // Выбрасывает NoSuchElementException, если поток был пуст
-            val reduceResult = countDownFlow.reduce { accumulator, value ->
-                accumulator + value
+          val flow1 = (1..5).asFlow()
+            //Преобразует элементы, испускаемые исходным потоком, применяя transform,
+            // который возвращает другой поток, а затем конкатенирует и сплющивает эти потоки.
+            //flatMapMerge
+            //flatMapLatest
+            flow1.flatMapConcat { value ->
+                println("Flow1 value: $value")
+                flow {
+                    emit(value + 1)
+                    delay(500)
+                }
+            }.collect{
+                println("New Flow value: $it")
             }
-            println("Returns Accumulates value: $reduceResult")
-
-            //Накапливает значение, начиная с начального значения и
-            // применяя операцию текущее значение аккумулятора и каждого элемента
-            val reduceResult2 = countDownFlow.fold(5) { accumulator, value ->
-                accumulator + value
-            }
-            println("Returns Accumulates fold value: $reduceResult2")
         }
     }
 
