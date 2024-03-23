@@ -11,10 +11,13 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-class MyViewModel : ViewModel() {
+class MyViewModel(
+    private val dispatchers: DispatcherProvider
+) : ViewModel() {
 
     val countDownFlow = flow<Int> {
         var currentCount = COUNT
@@ -24,7 +27,7 @@ class MyViewModel : ViewModel() {
             currentCount--
             emit(currentCount)
         }
-    }
+    }.flowOn(dispatchers.main)
 
     private val _stateCount = MutableStateFlow(0)
     val stateCount = _stateCount.asStateFlow()
@@ -34,28 +37,27 @@ class MyViewModel : ViewModel() {
 
     init {
       //  collectFlow()
-        squareNumber(5)
-
-        viewModelScope.launch {
+        squareNumber(3)
+        viewModelScope.launch(dispatchers.main) {
             stateShared.collect {
                 delay(2000L)
                 println("FIRST FLOW: The receive number: $it")
             }
         }
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             stateShared.collect {
                 delay(3000L)
                 println("SECOND FLOW: The receive number: $it")
             }
         }
         //Только когда есть подписка будет осуществлен выброс emit
-        squareNumber(5)
+      //  squareNumber(5)
         //Можно добавить значение replay для sharedFlow
         //тогда выбросу будут кэшироваться и отдаваться последним подписчикам
     }
 
     fun squareNumber(number: Int) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             _stateShared.emit(number * number)
         }
     }

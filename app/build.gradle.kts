@@ -60,6 +60,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    testImplementation (libs.turbine)
+    testImplementation (libs.truth)
+    testImplementation (libs.kotlinx.coroutines.test)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
